@@ -1,0 +1,1 @@
+# smart-inventory-and-supply-chain-management-platform-using-optimize-DBMS.
