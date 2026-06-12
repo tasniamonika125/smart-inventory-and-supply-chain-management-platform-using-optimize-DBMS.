@@ -1,0 +1,44 @@
+{
+  "items": [
+    {
+      "id": "a1b2c3d4",
+      "name": "Industrial Bearings",
+      "quantity": 120,
+      "supplier": "MechPro Ltd",
+      "price": 4.75,
+      "last_updated": "2026-04-28T09:15:00"
+    },
+    {
+      "id": "e5f6g7h8",
+      "name": "Hydraulic Hose 12mm",
+      "quantity": 3,
+      "supplier": "FluidTech Co",
+      "price": 22.50,
+      "last_updated": "2026-04-29T14:30:00"
+    },
+    {
+      "id": "i9j0k1l2",
+      "name": "Steel Bolts M8",
+      "quantity": 0,
+      "supplier": "MechPro Ltd",
+      "price": 0.35,
+      "last_updated": "2026-04-30T08:00:00"
+    },
+    {
+      "id": "m3n4o5p6",
+      "name": "Safety Gloves XL",
+      "quantity": 48,
+      "supplier": "SafeGuard Inc",
+      "price": 7.99,
+      "last_updated": "2026-04-27T11:45:00"
+    },
+    {
+      "id": "q7r8s9t0",
+      "name": "Carbon Filter 5\"",
+      "quantity": 2,
+      "supplier": "FluidTech Co",
+      "price": 34.00,
+      "last_updated": "2026-05-01T07:20:00"
+    }
+  ]
+}

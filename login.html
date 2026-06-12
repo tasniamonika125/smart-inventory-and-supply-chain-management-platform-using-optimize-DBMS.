@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Smart Inventory Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:          #0d0f14;
+      --surface:     #13161e;
+      --surface-2:   #1a1e2a;
+      --border:      #252a38;
+      --border-hi:   #363d52;
+      --accent:      #00d4ff;
+      --accent-glow: rgba(0, 212, 255, 0.15);
+      --accent-dim:  rgba(0, 212, 255, 0.08);
+      --success:     #00e676;
+      --danger:      #ff3d71;
+      --text:        #e4e8f0;
+      --text-muted:  #6b7490;
+      --text-dim:    #8892aa;
+      --mono:        'IBM Plex Mono', monospace;
+      --sans:        'IBM Plex Sans', sans-serif;
+      --radius:      6px;
+      --radius-lg:   14px;
+      --transition:  all 0.22s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Animated grid background ── */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: gridDrift 20s linear infinite;
+    }
+
+    @keyframes gridDrift {
+      from { background-position: 0 0; }
+      to   { background-position: 48px 48px; }
+    }
+
+    /* ── Glow blobs ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.12;
+      animation: blobPulse 8s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    .blob-1 {
+      width: 500px; height: 500px;
+      background: var(--accent);
+      top: -150px; left: -100px;
+    }
+
+    .blob-2 {
+      width: 400px; height: 400px;
+      background: #0066ff;
+      bottom: -100px; right: -80px;
+      animation-delay: -4s;
+    }
+
+    @keyframes blobPulse {
+      from { transform: scale(1)   translate(0, 0); }
+      to   { transform: scale(1.15) translate(30px, 20px); }
+    }
+
+    /* ── Main card ── */
+    .login-card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      margin: 20px;
+      background: rgba(19, 22, 30, 0.85);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(20px);
+      box-shadow:
+        0 0 0 1px rgba(0,212,255,0.06),
+        0 24px 64px rgba(0,0,0,0.6),
+        0 0 80px rgba(0,212,255,0.06);
+      animation: cardIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+      overflow: hidden;
+    }
+
+    @keyframes cardIn {
+      from { transform: translateY(30px) scale(0.96); opacity: 0; }
+      to   { transform: translateY(0)    scale(1);    opacity: 1; }
+    }
+
+    /* ── Top accent bar ── */
+    .card-bar {
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: barScan 3s ease-in-out infinite;
+    }
+
+    @keyframes barScan {
+      0%, 100% { background-position: -100% 0; opacity: 0.6; }
+      50%       { background-position: 200% 0;  opacity: 1; }
+    }
+
+    /* ── Card header ── */
+    .card-header {
+      padding: 36px 36px 28px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-ring {
+      width: 64px; height: 64px;
+      margin: 0 auto 18px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,100,200,0.2));
+      border: 1px solid rgba(0,212,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 0 30px rgba(0,212,255,0.2);
+      animation: logoGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes logoGlow {
+      from { box-shadow: 0 0 20px rgba(0,212,255,0.15); }
+      to   { box-shadow: 0 0 40px rgba(0,212,255,0.35); }
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .card-subtitle {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    /* ── Form ── */
+    .card-body { padding: 28px 36px 36px; }
+
+    .form-group { margin-bottom: 18px; }
+
+    .form-label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .form-control {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      padding: 11px 12px 11px 38px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .form-control:focus {
+      border-color: var(--accent);
+      background: rgba(0,212,255,0.04);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .form-control::placeholder { color: var(--text-muted); }
+
+    /* ── Toggle password visibility ── */
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: var(--mono);
+      letter-spacing: 0.04em;
+      transition: var(--transition);
+      padding: 4px;
+    }
+
+    .toggle-pw:hover { color: var(--accent); }
+
+    /* ── Error alert ── */
+    .alert-error {
+      background: rgba(255,61,113,0.1);
+      border: 1px solid rgba(255,61,113,0.3);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      color: var(--danger);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60%  { transform: translateX(-5px); }
+      40%, 80%  { transform: translateX(5px); }
+    }
+
+    /* ── Submit button ── */
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 0 20px var(--accent-glow);
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-login:hover {
+      background: #33ddff;
+      box-shadow: 0 0 32px rgba(0,212,255,0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-login:active { transform: translateY(0); }
+
+    /* ── Demo credentials panel ── */
+    .demo-creds {
+      margin-top: 24px;
+      padding: 16px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(0,212,255,0.12);
+      border-radius: var(--radius);
+    }
+
+    .demo-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .cred-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.78rem;
+    }
+
+    .cred-row:last-child { border-bottom: none; }
+
+    .cred-user {
+      font-family: var(--mono);
+      color: var(--text-dim);
+    }
+
+    .cred-badge {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      padding: 2px 7px;
+      border-radius: 20px;
+      letter-spacing: 0.06em;
+    }
+
+    .badge-admin    { background: rgba(255,107,53,0.15);  color: #ff6b35; border: 1px solid rgba(255,107,53,0.3); }
+    .badge-manager  { background: rgba(0,230,118,0.12);   color: #00e676; border: 1px solid rgba(0,230,118,0.3); }
+    .badge-operator { background: rgba(0,212,255,0.12);   color: var(--accent); border: 1px solid rgba(0,212,255,0.3); }
+
+    .use-cred {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      background: none;
+      border: 1px solid var(--border-hi);
+      color: var(--text-muted);
+      border-radius: var(--radius);
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .use-cred:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Footer ── */
+    .card-footer {
+      padding: 16px 36px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+    }
+
+    .card-footer span { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="login-card">
+  <div class="card-bar"></div>
+
+  <div class="card-header">
+    <div class="logo-ring">📦</div>
+    <div class="card-title">Smart Inventory</div>
+    <div class="card-subtitle">Supply Chain Management Platform</div>
+  </div>
+
+  <div class="card-body">
+
+    {% if error %}
+    <div class="alert-error">
+      <span>⚠</span> {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="/login" autocomplete="off">
+
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input class="form-control" id="username" name="username"
+                 type="text" placeholder="Enter username" required autofocus />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input class="form-control" id="password" name="password"
+                 type="password" placeholder="Enter password" required />
+          <button type="button" class="toggle-pw" onclick="togglePw()" id="pw-toggle">show</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-login">
+        <span>→</span> Access System
+      </button>
+
+    </form>
+
+    <!-- Demo credentials -->
+    <div class="demo-creds">
+      <div class="demo-label">🔐 Demo Credentials</div>
+
+      <div class="cred-row">
+        <span class="cred-user">admin / admin123</span>
+        <span class="cred-badge badge-admin">Admin</span>
+        <button class="use-cred" onclick="fillCreds('admin','admin123')">use</button>
+      </div>
+      <div class="cred-row">
+        <span class="cred-user">john / john123</span>
+        <span class="cred-badge badge-manager">Manager</span>
+        <button class="use-cred" onclick="fillCreds('john','john123')">use</button>
+      </div>
+      <div class="cred-row">
+        <span class="cred-user">sara / sara123</span>
+        <span class="cred-badge badge-operator">Operator</span>
+        <button class="use-cred" onclick="fillCreds('sara','sara123')">use</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card-footer">
+    Secured by session-based auth &nbsp;·&nbsp; <span>DBMS v1.0</span>
+  </div>
+</div>
+
+<script>
+  function togglePw() {
+    const pw  = document.getElementById('password');
+    const btn = document.getElementById('pw-toggle');
+    if (pw.type === 'password') { pw.type = 'text';     btn.textContent = 'hide'; }
+    else                        { pw.type = 'password'; btn.textContent = 'show'; }
+  }
+
+  function fillCreds(user, pass) {
+    document.getElementById('username').value = user;
+    document.getElementById('password').value = pass;
+    document.getElementById('username').focus();
+  }
+</script>
+
+</body>
+</html>

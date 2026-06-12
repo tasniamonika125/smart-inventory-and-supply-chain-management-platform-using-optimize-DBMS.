@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Inventory &amp; Supply Chain Platform</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="logo-block">
+      <div class="logo-icon">📦</div>
+      <div class="logo-text">
+        <h1>Smart Inventory</h1>
+        <span>Supply Chain Management Platform v1.0</span>
+      </div>
+    </div>
+    <div class="header-meta" style="display:flex;align-items:center;gap:20px">
+      <div>
+        Optimized DBMS · JSON Storage Engine<br>
+        <strong id="stat-supp">—</strong> active suppliers &nbsp;|&nbsp; real-time sync
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:0.72rem;color:var(--accent);font-weight:600">{{ user.name }}</div>
+        <div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-muted);margin-bottom:6px">{{ user.role }}</div>
+        <a href="/logout" style="font-family:var(--mono);font-size:0.65rem;background:rgba(255,61,113,0.12);color:#ff3d71;border:1px solid rgba(255,61,113,0.3);padding:4px 12px;border-radius:4px;text-decoration:none;letter-spacing:0.06em">⏻ Logout</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Dashboard Stats ── -->
+  <section class="stats-grid" aria-label="Dashboard Statistics">
+
+    <div class="stat-card" style="--card-accent: var(--accent)">
+      <div class="stat-label">Total Items</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-sub">inventory records</div>
+    </div>
+
+    <div class="stat-card" style="--card-accent: var(--warning)">
+      <div class="stat-label">Low Stock</div>
+      <div class="stat-value" id="stat-low">—</div>
+      <div class="stat-sub">qty &lt; 5 units</div>
+    </div>
+
+    <div class="stat-card" style="--card-accent: var(--danger)">
+      <div class="stat-label">Out of Stock</div>
+      <div class="stat-value" id="stat-out">—</div>
+      <div class="stat-sub">needs reorder</div>
+    </div>
+
+    <div class="stat-card" style="--card-accent: var(--success)">
+      <div class="stat-label">Inventory Value</div>
+      <div class="stat-value" style="font-size:1.4rem" id="stat-value">—</div>
+      <div class="stat-sub">total cost basis</div>
+    </div>
+
+  </section>
+
+  <!-- ── Main Grid ── -->
+  <div class="main-grid">
+
+    <!-- ── Left: Add Item Form ── -->
+    <aside>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">➕ Add Item</span>
+          <span class="panel-badge">CRUD · INSERT</span>
+        </div>
+        <div class="form-body">
+          <form id="add-form" autocomplete="off">
+
+            <div class="form-group">
+              <label class="form-label" for="f-name">Item Name</label>
+              <input class="form-control" id="f-name" type="text"
+                     placeholder="e.g. Hydraulic Hose 12mm" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="f-supplier">Supplier</label>
+              <input class="form-control" id="f-supplier" type="text"
+                     placeholder="e.g. FluidTech Co" required />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="f-quantity">Quantity</label>
+                <input class="form-control" id="f-quantity" type="number"
+                       min="0" placeholder="0" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="f-price">Price ($)</label>
+                <input class="form-control" id="f-price" type="number"
+                       min="0" step="0.01" placeholder="0.00" required />
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">✚ Add to Inventory</button>
+            <button type="button" id="clear-btn" class="btn btn-secondary">✕ Clear Form</button>
+          </form>
+
+          <!-- Optimization notes -->
+          <div style="margin-top:24px; padding-top:16px; border-top:1px solid var(--border)">
+            <div class="stat-label" style="margin-bottom:10px">DBMS Optimization Layer</div>
+            <ul style="list-style:none; font-size:0.75rem; color:var(--text-muted); line-height:2">
+              <li>🔑 UUID-based unique ID generation</li>
+              <li>📇 O(1) dictionary index lookup</li>
+              <li>🚫 Duplicate name+supplier guard</li>
+              <li>✅ Server-side input validation</li>
+              <li>🕐 Auto timestamp on write</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Right: Inventory Table ── -->
+    <main>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">📋 Inventory Records</span>
+          <span class="panel-badge" id="item-count">0 items</span>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <input class="search-box" id="search-input" type="search"
+                 placeholder="Search items, suppliers, IDs…" />
+          <select class="filter-select" id="filter-supplier">
+            <option value="">All Suppliers</option>
+          </select>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+          <table aria-label="Inventory Table">
+            <thead>
+              <tr>
+                <th data-sort="id">ID <span class="sort-icon">⇅</span></th>
+                <th data-sort="name">Name <span class="sort-icon">⇅</span></th>
+                <th data-sort="supplier">Supplier <span class="sort-icon">⇅</span></th>
+                <th data-sort="quantity">Qty <span class="sort-icon">⇅</span></th>
+                <th data-sort="price">Price <span class="sort-icon">⇅</span></th>
+                <th data-sort="status">Status <span class="sort-icon">⇅</span></th>
+                <th data-sort="last_updated">Updated <span class="sort-icon">⇅</span></th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-body">
+              <tr><td colspan="8">
+                <div class="empty-state">
+                  <div class="empty-icon">⏳</div>
+                  <p>Loading inventory data…</p>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+  </div><!-- /main-grid -->
+
+</div><!-- /app-wrapper -->
+
+<!-- ── Edit Modal ── -->
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-heading">✎ Edit Inventory Item</span>
+      <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="edit-form" autocomplete="off">
+
+        <div class="form-group">
+          <label class="form-label" for="e-f-name">Item Name</label>
+          <input class="form-control" id="e-f-name" type="text" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="e-f-supplier">Supplier</label>
+          <input class="form-control" id="e-f-supplier" type="text" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="e-f-quantity">Quantity</label>
+            <input class="form-control" id="e-f-quantity" type="number" min="0" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="e-f-price">Price ($)</label>
+            <input class="form-control" id="e-f-price" type="number" min="0" step="0.01" required />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast Container ── -->
+<div id="toast-container" aria-live="polite"></div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
